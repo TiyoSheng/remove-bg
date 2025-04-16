@@ -12,8 +12,22 @@ export default defineConfig({
       name: 'index.js',
       apply: 'build',
       async writeBundle() {
-        const manifest = JSON.parse(await fs.readFile("dist/.vite/manifest.json", "utf-8"))
-        await fs.writeFile("dist/index.js", `export {default} from "./${manifest["src/App.tsx"].file}"`)
+        try {
+          const manifest = JSON.parse(await fs.readFile("dist/.vite/manifest.json", "utf-8"))
+          // 检查 manifest 中的所有入口点
+          console.log("Available entries in manifest:", Object.keys(manifest))
+          
+          // 使用 index.html 作为入口点
+          const indexEntry = manifest["index.html"]
+          if (!indexEntry || !indexEntry.file) {
+            console.error("Could not find index.html entry in manifest or missing file property")
+            return
+          }
+          
+          await fs.writeFile("dist/index.js", `export {default} from "./${indexEntry.file}"`)
+        } catch (error) {
+          console.error("Error in writeBundle plugin:", error)
+        }
       }
      }
   ],
